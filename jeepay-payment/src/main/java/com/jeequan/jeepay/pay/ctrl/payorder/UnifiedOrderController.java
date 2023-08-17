@@ -55,7 +55,7 @@ public class UnifiedOrderController extends AbstractPayOrderController {
         //获取参数 & 验签
         UnifiedOrderRQ rq = getRQByWithMchSign(UnifiedOrderRQ.class);
 
-        UnifiedOrderRQ bizRQ = buildBizRQ(rq);
+         UnifiedOrderRQ bizRQ = buildBizRQ(rq);
 
         //实现子类的res
         ApiRes apiRes = unifiedOrder(bizRQ.getWayCode(), bizRQ);
