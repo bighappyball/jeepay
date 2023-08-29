@@ -88,7 +88,6 @@ docker rm -f dubbo-admin && docker run -d \
 --restart=always \
 apache/dubbo-admin:0.5.0
 
-
 docker rm -f dubbo-admin && docker run -d --name dubbo-admin --net ruoyi -p 9600:8080 -e admin.registry.address=zookeeper://zookeeper:2181 -e admin.config-center=zookeeper://zookeeper:2181 -e admin.metadata-report.address=zookeeper://zookeeper:2181 --restart=always apache/dubbo-admin:0.5.0
 ### zookeeper
 
