@@ -15,7 +15,11 @@
  */
 package com.jeequan.jeepay.mch.ctrl.paytest;
 
+import cn.hutool.core.date.DateUtil;
 import com.alibaba.fastjson.JSONObject;
+import com.jeepay.jeepaypayapi.param.UnifiedOrderParam;
+import com.jeepay.jeepaypayapi.remote.UnifiedOrderService;
+import com.jeequan.jeepay.Jeepay;
 import com.jeequan.jeepay.JeepayClient;
 import com.jeequan.jeepay.core.constants.CS;
 import com.jeequan.jeepay.core.entity.MchApp;
@@ -23,43 +27,60 @@ import com.jeequan.jeepay.core.entity.MchPayPassage;
 import com.jeequan.jeepay.core.exception.BizException;
 import com.jeequan.jeepay.core.model.ApiRes;
 import com.jeequan.jeepay.core.model.DBApplicationConfig;
+import com.jeequan.jeepay.exception.APIConnectionException;
 import com.jeequan.jeepay.exception.JeepayException;
 import com.jeequan.jeepay.mch.ctrl.CommonCtrl;
 import com.jeequan.jeepay.model.PayOrderCreateReqModel;
+import com.jeequan.jeepay.net.APIJeepayRequest;
+import com.jeequan.jeepay.net.RequestOptions;
 import com.jeequan.jeepay.request.PayOrderCreateRequest;
 import com.jeequan.jeepay.response.PayOrderCreateResponse;
 import com.jeequan.jeepay.service.impl.MchAppService;
 import com.jeequan.jeepay.service.impl.MchPayPassageService;
 import com.jeequan.jeepay.service.impl.SysConfigService;
+import com.jeequan.jeepay.util.JeepayKit;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.dubbo.config.annotation.DubboReference;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import javax.annotation.Resource;
+import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
 /*
-* 支付测试类
-*
-* @author terrfly
-* @site https://www.jeequan.com
-* @date 2021/6/22 9:43
-*/
+ * 支付测试类
+ *
+ * @author terrfly
+ * @site https://www.jeequan.com
+ * @date 2021/6/22 9:43
+ */
 @Api(tags = "支付测试")
 @RestController
 @RequestMapping("/api/paytest")
 public class PaytestController extends CommonCtrl {
 
-    @Autowired private MchAppService mchAppService;
-    @Autowired private MchPayPassageService mchPayPassageService;
-    @Autowired private SysConfigService sysConfigService;
+    @Autowired
+    private MchAppService mchAppService;
+    @Autowired
+    private MchPayPassageService mchPayPassageService;
+    @Autowired
+    private SysConfigService sysConfigService;
 
-    /** 查询商户对应应用下支持的支付方式 **/
+    @DubboReference(version = "1.0.0")
+    private UnifiedOrderService unifiedOrderService;
+
+    /**
+     * 查询商户对应应用下支持的支付方式
+     **/
     @ApiOperation("查询商户对应应用下支持的支付方式")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "iToken", value = "用户身份凭证", required = true, paramType = "header"),
@@ -81,7 +102,9 @@ public class PaytestController extends CommonCtrl {
     }
 
 
-    /** 调起下单接口 **/
+    /**
+     * 调起下单接口
+     **/
     @ApiOperation("调起下单接口")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "iToken", value = "用户身份凭证", required = true, paramType = "header"),
@@ -113,7 +136,7 @@ public class PaytestController extends CommonCtrl {
         Byte divisionMode = getValByteRequired("divisionMode");
         String orderTitle = getValStringRequired("orderTitle");
 
-        if(StringUtils.isEmpty(orderTitle)){
+        if (StringUtils.isEmpty(orderTitle)) {
             throw new BizException("订单标题不能为空");
         }
 
@@ -123,7 +146,7 @@ public class PaytestController extends CommonCtrl {
 
 
         MchApp mchApp = mchAppService.getById(appId);
-        if(mchApp == null || mchApp.getState() != CS.PUB_USABLE || !mchApp.getAppId().equals(appId)){
+        if (mchApp == null || mchApp.getState() != CS.PUB_USABLE || !mchApp.getAppId().equals(appId)) {
             throw new BizException("商户应用不存在或不可用");
         }
 
@@ -137,9 +160,9 @@ public class PaytestController extends CommonCtrl {
         model.setWayCode(wayCode);
         model.setAmount(amount);
         // paypal通道使用USD类型货币
-        if(wayCode.equalsIgnoreCase("pp_pc")) {
+        if (wayCode.equalsIgnoreCase("pp_pc")) {
             model.setCurrency("USD");
-        }else {
+        } else {
             model.setCurrency("CNY");
         }
         model.setClientIp(getClientIp());
@@ -153,25 +176,52 @@ public class PaytestController extends CommonCtrl {
 
         //设置扩展参数
         JSONObject extParams = new JSONObject();
-        if(StringUtils.isNotEmpty(payDataType)) {
+        if (StringUtils.isNotEmpty(payDataType)) {
             extParams.put("payDataType", payDataType.trim());
         }
-        if(StringUtils.isNotEmpty(authCode)) {
+        if (StringUtils.isNotEmpty(authCode)) {
             extParams.put("authCode", authCode.trim());
         }
         model.setChannelExtra(extParams.toString());
 
-        JeepayClient jeepayClient = new JeepayClient(dbApplicationConfig.getPaySiteUrl(), mchApp.getAppSecret());
-
-        try {
-            PayOrderCreateResponse response = jeepayClient.execute(request);
-            if(response.getCode() != 0){
-                throw new BizException(response.getMsg());
-            }
-            return ApiRes.ok(response.get());
-        } catch (JeepayException e) {
-            throw new BizException(e.getMessage());
+//        JeepayClient jeepayClient = new JeepayClient(dbApplicationConfig.getPaySiteUrl(), mchApp.getAppSecret());
+//        try {
+//            PayOrderCreateResponse response = jeepayClient.execute(request);
+//            if (response.getCode() != 0) {
+//                throw new BizException(response.getMsg());
+//            }
+//            return ApiRes.ok(response.get());
+//        } catch (JeepayException e) {
+//            throw new BizException(e.getMessage());
+//        }
+        ApiRes apiRes = remote(model);
+        if (apiRes.getCode() != 0) {
+            throw new BizException(apiRes.getMsg());
         }
+
+        return ApiRes.ok(apiRes.getData());
+
+
+    }
+
+    private ApiRes remote(PayOrderCreateReqModel model) {
+        UnifiedOrderParam unifiedOrderParam = new UnifiedOrderParam();
+        BeanUtils.copyProperties(model, unifiedOrderParam);
+        unifiedOrderParam.setVersion("1.0");
+        unifiedOrderParam.setSignType("MD5");
+        int requestTime = (int) (System.currentTimeMillis() / 1000);
+        unifiedOrderParam.setReqTime(Integer.toString(requestTime));
+        String signature;
+        String signType = unifiedOrderParam.getSignType();
+        if ("MD5".equalsIgnoreCase(signType)) {
+            signature = JeepayKit.getSign(JSONObject.toJSONString(unifiedOrderParam), "lp25wrvffaf7g6d1alm05kcr0rdhuyvh4ovi6iucrzokwmlksvdg57c6gt9h2ze213ubuzkghb1ac1gqi6jk4mlkvavhx379f3tubhuhl5z3z1sip4pmuuraad9kfz0h");
+            unifiedOrderParam.setSign(signature);
+        } else if ("RSA2".equalsIgnoreCase(signType)) {
+            throw new AssertionError("暂不支持RSA2签名");
+        }
+
+        ApiRes apiRes = unifiedOrderService.unifiedOrder(unifiedOrderParam);
+        return apiRes;
     }
 
 }

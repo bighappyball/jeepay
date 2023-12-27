@@ -23,7 +23,26 @@
 
     <!-- 项目依赖声明 -->
     <dependencies>
-
+        <dependency>
+            <groupId>com.jeepay</groupId>
+            <artifactId>jeepay-pay-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.dubbo</groupId>
+            <artifactId>dubbo-spring-boot-starter</artifactId>
+        </dependency>
+        <!-- zookeeper依赖 -->
+        <dependency>
+            <groupId>org.apache.dubbo</groupId>
+            <artifactId>dubbo-dependencies-zookeeper</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-log4j12</artifactId>
+                </exclusion>
+            </exclusions>
+            <type>pom</type>
+        </dependency>
         <!-- 依赖[ service ]包, 会自动传递依赖[ core ]包。  -->
         <dependency>
             <groupId>com.jeequan</groupId>

@@ -2,6 +2,8 @@ server:
   port: 9216 #设置端口
 
 spring:
+  application:
+    name: jeepay-pay
   redis:
     database: 3    #1库：运营平台  #2库：商户系统 #3库：支付网关
 
@@ -12,3 +14,19 @@ knife4j:
       name: 接口文档
       # 某一个文件夹下所有的.md文件
       locations: classpath:markdown/doc/*
+
+
+
+#dubbo:
+#  application:
+#    name: ${spring.application.name}
+#  registry:
+#    address: zookeeper://47.95.208.214:2181
+#    protocol: zookeeper
+#    timeout: 10000
+#  protocol:
+#    name: dubbo
+#  #  config-center:
+#  #    address: zookeeper://47.95.208.214:2181
+#  metadata-report:
+#    address: zookeeper://47.95.208.214:2181

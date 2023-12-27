@@ -21,7 +21,7 @@
 
   <!-- 声明子项目 -->
   <modules>
-    <module>jeepay-z-codegen</module>    <!-- 代码生成器 -->
+<!--    <module>jeepay-z-codegen</module>    &lt;!&ndash; 代码生成器 &ndash;&gt;-->
 
     <module>jeepay-core</module>  <!-- 基础函数, 包含工具类等 -->
     <module>jeepay-service</module>  <!-- db service等 -->
@@ -67,6 +67,12 @@
             <groupId>com.jeequan</groupId>
             <artifactId>jeepay-core</artifactId>
             <version>${isys.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.jeepay</groupId>
+            <artifactId>jeepay-pay-api</artifactId>
+            <version>Final</version>
         </dependency>
 
         <!-- [ service ]包, 会自动传递依赖[ core ]包。  -->
@@ -142,6 +148,20 @@
             <groupId>com.google.zxing</groupId>
             <artifactId>core</artifactId>
             <version>3.1.0</version>
+        </dependency>
+
+        <!-- 引入dubbo的依赖 -->
+        <dependency>
+            <groupId>org.apache.dubbo</groupId>
+            <artifactId>dubbo-spring-boot-starter</artifactId>
+            <version>2.7.18</version>
+        </dependency>
+        <!-- zookeeper依赖 -->
+        <dependency>
+            <groupId>org.apache.dubbo</groupId>
+            <artifactId>dubbo-dependencies-zookeeper</artifactId>
+            <version>2.7.18</version>
+            <type>pom</type>
         </dependency>
 
         <dependency>

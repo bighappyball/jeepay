@@ -69,9 +69,9 @@ public class AuthController extends CommonCtrl {
         String vercodeToken = Base64.decodeStr(getValStringRequired("vt"));	//验证码token, vercode token ,  已做base64处理
 
         String cacheCode = RedisUtil.getString(CS.getCacheKeyImgCode(vercodeToken));
-        if(StringUtils.isEmpty(cacheCode) || !cacheCode.equalsIgnoreCase(vercode)){
-            throw new BizException("验证码有误！");
-        }
+//        if(StringUtils.isEmpty(cacheCode) || !cacheCode.equalsIgnoreCase(vercode)){
+//            throw new BizException("验证码有误！");
+//        }
 
 		// 返回前端 accessToken
 		String accessToken = authService.auth(account, ipassport);

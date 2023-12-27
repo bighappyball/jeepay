@@ -76,12 +76,12 @@ rocketmq:
   producer:
     group: JEEPAY-GROUP
 
-## 阿里云rocketmq配置 ( 注意：aliyun-rocketmq配置项请放置到根目录， 不是spring的二级配置！需要阿里云开通rocketMQ产品，创建Group和Topic  )
-#aliyun-rocketmq:
-#  namesrvAddr: xxx
-#  accessKey: xxx
-#  secretKey: xxx
-#  groupId: GID_JEEPAY_T
+  ## 阿里云rocketmq配置 ( 注意：aliyun-rocketmq配置项请放置到根目录， 不是spring的二级配置！需要阿里云开通rocketMQ产品，创建Group和Topic  )
+  #aliyun-rocketmq:
+  #  namesrvAddr: xxx
+  #  accessKey: xxx
+  #  secretKey: xxx
+  #  groupId: GID_JEEPAY_T
 
   #日志配置参数。
   # 当存在logback-spring.xml文件时： 该配置将引进到logback配置，  springboot配置不生效。
@@ -124,3 +124,17 @@ isys:
   mq:
     vender: rocketMQ  #  切换MQ厂商， 支持：【 activeMQ  rabbitMQ  rocketMQ  aliYunRocketMQ 】， 需正确配置 【对应的yml参数】 和 【jeepay-components-mq项目下pom.xml中的依赖包】。
 
+dubbo:
+  application:
+    name: ${spring.application.name}
+  registry:
+    address: zookeeper://47.95.208.214:2181
+    protocol: zookeeper
+    timeout: 10000
+  protocol:
+    name: dubbo
+    host:
+  #  config-center:
+  #    address: zookeeper://47.95.208.214:2181
+  metadata-report:
+    address: zookeeper://47.95.208.214:2181

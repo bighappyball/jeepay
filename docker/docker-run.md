@@ -91,12 +91,16 @@ apache/dubbo-admin:0.5.0
 docker rm -f dubbo-admin && docker run -d --name dubbo-admin --link zookeeper -p 9600:8080 -e admin.registry.address=zookeeper://zookeeper:2181 -e admin.config-center=zookeeper://zookeeper:2181 -e admin.metadata-report.address=zookeeper://zookeeper:2181 --restart=always apache/dubbo-admin:0.5.0
 ### zookeeper
 
-docker rm -f zookeeper && docker run -d -p 2181:2181 --net ruoyi --name zookeeper --privileged zookeeper:3.4.9
+docker rm -f zookeeper && docker run -d -p 2181:2181 --name zookeeper --privileged zookeeper:3.4.9
 
 连接zk工具 prettyZoo
 
 
 ### mysql
+
+docker run -p 3306:3306 --name mysql --restart=always --privileged=true \
+-v /etc/localtime:/etc/localtime:ro \
+-e MYSQL_ROOT_PASSWORD=kl19950320 -d  mysql:5.7
 
 docker run -p 3306:3306 --name mysql --restart=always --privileged=true \
 -v /usr/local/mysql/log:/var/log/mysql \
